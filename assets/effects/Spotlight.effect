@@ -1,0 +1,237 @@
+// Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.  
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+        alphaThreshold: { value: 0.5 }
+        # wh_ratio: { value: 1.0 }
+        # circle_center_x: { value: [1.0, 1.0, 1.0, 1.0] }
+        # circle_center_y: { value: [1.0, 1.0, 1.0, 1.0] }
+        # circle_r: { value: [1.0, 1.0, 1.0, 1.0] }
+        # circle_smooth: { value: [1.0, 1.0, 1.0, 1.0] }
+        # rect_center_x: { value: [1.0, 1.0, 1.0, 1.0] }
+        # rect_center_y: { value: [1.0, 1.0, 1.0, 1.0] }
+        # rect_w: { value: [1.0, 1.0, 1.0, 1.0] }
+        # rect_h: { value: [1.0, 1.0, 1.0, 1.0] }
+        # rect_smooth: { value: [1.0, 1.0, 1.0, 1.0] }
+}%
+
+
+CCProgram vs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  in vec3 a_position;
+
+  in vec4 a_color;
+  out vec4 v_color;
+
+  // 获取顶点坐标
+  in vec2 a_uv0;
+  // 定义变量，将顶点坐标传到 fs
+  out vec2 v_uv0;
+
+  void main () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if CC_USE_MODEL
+    pos = cc_matViewProj * cc_matWorld * pos;
+    #else
+    pos = cc_matViewProj * pos;
+    #endif
+
+    v_color = a_color;
+
+    v_uv0 = a_uv0;
+
+    gl_Position = pos;
+  }
+}%
+
+
+CCProgram fs %{
+  precision highp float;
+  
+  #include <alpha-test>
+
+  in vec4 v_color;
+  // 接收顶点坐标
+  in vec2 v_uv0;
+
+  #if USE_TEXTURE
+  uniform sampler2D texture;
+  #endif
+
+
+  uniform LIGHT {
+    // 圆的中心点的 x
+    vec4 circle_center_x0;
+    vec4 circle_center_x1;
+    vec4 circle_center_x2;
+    // 圆的中心点的 y
+    vec4 circle_center_y0;
+    vec4 circle_center_y1;
+    vec4 circle_center_y2;
+    // 圆的半径
+    vec4 circle_r0;
+    vec4 circle_r1;
+    vec4 circle_r2;
+    // 圆的边缘模糊
+    vec4 circle_smooth0;
+    vec4 circle_smooth1;
+    vec4 circle_smooth2;
+    // 矩形的中心点的 x
+    vec4 rect_center_x0;
+    vec4 rect_center_x1;
+    vec4 rect_center_x2;
+    // 矩形的中心点的 y
+    vec4 rect_center_y0;
+    vec4 rect_center_y1;
+    vec4 rect_center_y2;
+    // 矩形的宽高
+    vec4 rect_w0;
+    vec4 rect_h0;
+    vec4 rect_w1;
+    vec4 rect_h1;
+    vec4 rect_w2;
+    vec4 rect_h2;
+    // 矩形的边缘
+    vec4 rect_smooth0;
+    vec4 rect_smooth1;
+    vec4 rect_smooth2;
+    // 界面宽高比
+    float wh_ratio;
+  };
+
+
+  // 向量转为数组
+  void toArr(out float arr[12], vec4 v0, vec4 v1, vec4 v2) {
+    arr[0] = v0.r;
+    arr[1] = v0.g;
+    arr[2] = v0.b;
+    arr[3] = v0.a;
+    arr[4] = v1.r;
+    arr[5] = v1.g;
+    arr[6] = v1.b;
+    arr[7] = v1.a;
+    arr[8] = v2.r;
+    arr[9] = v2.g;
+    arr[10] = v2.b;
+    arr[11] = v2.a;
+  }
+
+
+  // 计算圆类型的透明度
+  float getCircleA(float x_arr[12], float y_arr[12], float r_arr[12], float smooth_arr[12]) {
+    float circle_a = 1.0;
+
+    float cur_dist,cur_r,cur_smooth,new_a;
+    for (int i = 0; i < 12; i++) 
+    {
+      if (r_arr[i] > 0.001 && (v_uv0.x - x_arr[i]) * wh_ratio < r_arr[i] && v_uv0.y - y_arr[i] < r_arr[i]) 
+      {
+        cur_dist = sqrt(pow((v_uv0.x - x_arr[i]) * wh_ratio, 2.0) + pow(v_uv0.y - y_arr[i], 2.0));
+        cur_r = r_arr[i];
+        cur_smooth = smooth_arr[i];
+
+        new_a = (smoothstep(cur_r - cur_smooth, cur_r, cur_dist));
+
+        circle_a *= new_a;
+
+      }
+    }
+
+    return circle_a;
+  }
+
+  // 计算矩形类型的透明度
+  float getRectA(float x_arr[12], float y_arr[12], float w_arr[12], float h_arr[12], float smooth_arr[12]) {
+    float ract_a = 1.0;
+
+    float x_dist,y_dist,cur_dist,cur_r,cur_smooth,new_a;
+    for (int i = 0; i < 12; i++) 
+    {
+      if ((w_arr[i] > 0.001 || h_arr[i] > 0.001) && (v_uv0.x - x_arr[i]) * wh_ratio < w_arr[i] && v_uv0.y - y_arr[i]<h_arr[i]) 
+      {
+
+        x_dist = abs((v_uv0.x - x_arr[i]) * wh_ratio);
+        y_dist = abs(v_uv0.y - y_arr[i]);
+
+        if (w_arr[i] / 2.0 - x_dist < h_arr[i] / 2.0  - y_dist) {
+          cur_dist = x_dist;
+          cur_r = w_arr[i] / 2.0;
+        } else {
+          cur_dist = y_dist;
+          cur_r = h_arr[i] / 2.0;
+        }
+        
+        cur_smooth = smooth_arr[i];
+        new_a = (smoothstep(cur_r - cur_smooth, cur_r, cur_dist));
+
+        ract_a *= new_a;
+
+      }
+    }
+
+    return ract_a;
+  }
+
+
+  // 主函数
+  void main () {
+    vec4 o = vec4(1, 1, 1, 1);
+
+    // 分别将圆相关的数据转化为数组
+    float circle_center_x_list[12];
+    toArr(circle_center_x_list, circle_center_x0, circle_center_x1, circle_center_x2);
+    float circle_center_y_list[12];
+    toArr(circle_center_y_list, circle_center_y0, circle_center_y1, circle_center_y2);
+    float circle_r_list[12];
+    toArr(circle_r_list, circle_r0, circle_r1, circle_r2);
+    float circle_smooth_list[12];
+    toArr(circle_smooth_list, circle_smooth0, circle_smooth1, circle_smooth2);
+    // 计算圆类型的叠加 alpha
+    float circleA = getCircleA(circle_center_x_list, circle_center_y_list, circle_r_list, circle_smooth_list);
+
+    // 分别将矩形相关的数据转化为数组
+    float rect_center_x_list[12];
+    toArr(rect_center_x_list, rect_center_x0, rect_center_x1, rect_center_x2);
+    float rect_center_y_list[12];
+    toArr(rect_center_y_list, rect_center_y0, rect_center_y1, rect_center_y2);
+    float rect_w_list[12];
+    toArr(rect_w_list, rect_w0, rect_w1, rect_w2);
+    float rect_h_list[12];
+    toArr(rect_h_list, rect_h0, rect_h1, rect_h2);
+    float rect_smooth_list[12];
+    toArr(rect_smooth_list, rect_smooth0, rect_smooth1, rect_smooth2);
+    // 计算矩形类型的叠加 alpha
+    float rectA = getRectA(rect_center_x_list, rect_center_y_list, rect_w_list, rect_h_list, rect_smooth_list);
+    
+    o.a = circleA * rectA;
+
+    #if USE_TEXTURE
+    o *= texture(texture, v_uv0);
+      #if CC_USE_ALPHA_ATLAS_TEXTURE
+      o.a *= texture2D(texture, v_uv0 + vec2(0, 0.5)).r;
+      #endif
+    #endif
+
+    o *= v_color;
+
+    ALPHA_TEST(o);
+
+    gl_FragColor = o;
+  }
+
+}%

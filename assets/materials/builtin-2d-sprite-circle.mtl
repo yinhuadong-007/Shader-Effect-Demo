@@ -1,0 +1,35 @@
+{
+  "__type__": "cc.Material",
+  "_name": "builtin-2d-sprite-circle",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "aca18c59-f659-4f9c-9eb6-d9eee8461e61"
+  },
+  "_techniqueIndex": 0,
+  "_techniqueData": {
+    "0": {
+      "props": {
+        "u_cut_x": 18,
+        "u_cut_y": 50,
+        "u_normal": 1,
+        "u_width": 195,
+        "u_height": 270,
+        "u_radius_left_bottom": 80,
+        "u_cut_width": 160,
+        "u_cut_height": 160,
+        "u_radius_right_top": 80,
+        "u_radius_right_bottom": 80,
+        "u_radius": 80,
+        "alphaThreshold": 0,
+        "texture": {
+          "__uuid__": "6aa0aa6a-ebee-4155-a088-a687a6aadec4"
+        }
+      },
+      "defines": {
+        "USE_TEXTURE": false,
+        "USE_ALPHA_TEST": false
+      }
+    }
+  }
+}

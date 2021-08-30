@@ -1,0 +1,51 @@
+
+ CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs
+      frag: fs
+      blendState:
+        targets:
+        - blend: true
+      rasterizerState:
+        cullMode: none
+      properties:
+        texture: { value: white }
+}%
+
+CCProgram vs %{
+	#include <cc-global>
+	precision highp float;
+    in vec3 a_position;
+    in vec2 a_uv0;
+    out vec2 uv0;
+    void main () {
+        gl_Position = cc_matViewProj * vec4(a_position, 1);
+        uv0 = a_uv0;
+    }
+}%
+
+
+CCProgram fs %{
+  precision highp float;
+  
+  in vec2 uv0;
+  uniform sampler2D texture;
+
+  void main () {
+    vec4 yuv = texture2D(texture,uv0);
+    vec4 color= vec4(0,0,0,0);
+    if(yuv.r <= .0 && yuv.g<= .0 && yuv.b<= .0){
+
+    }else{
+      color.r =yuv.r + 1.4022 * yuv.b - 0.7011;
+      color.r = (color.r < 0.0) ? 0.0 : ((color.r > 1.0) ? 1.0 : color.r);
+      color.g =yuv.r - 0.3456 * yuv.g - 0.7145 * yuv.b + 0.53005;
+      color.g = (color.g < 0.0) ? 0.0 : ((color.g > 1.0) ? 1.0 : color.g);
+      color.b =yuv.r + 1.771 * yuv.g - 0.8855;
+      color.b = (color.b < 0.0) ? 0.0 : ((color.b > 1.0) ? 1.0 : color.b);
+      color.a = 1.0;
+    }
+    gl_FragColor = color;
+  }
+}%

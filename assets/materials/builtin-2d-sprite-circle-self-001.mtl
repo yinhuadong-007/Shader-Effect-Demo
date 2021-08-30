@@ -1,0 +1,23 @@
+{
+  "__type__": "cc.Material",
+  "_name": "builtin-2d-sprite-circle-self",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "fc5fd1d6-b0dc-496e-aa99-8e9a4b205a21"
+  },
+  "_techniqueIndex": 0,
+  "_techniqueData": {
+    "0": {
+      "props": {
+        "u_radius": 0.3,
+        "u_cut_x": 0.5,
+        "u_cut_y": 0.5,
+        "u_normal": 0
+      },
+      "defines": {
+        "USE_TEXTURE": false
+      }
+    }
+  }
+}

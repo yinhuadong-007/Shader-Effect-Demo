@@ -1,0 +1,17 @@
+{
+  "ver": "1.0.25",
+  "uuid": "71f2da52-3508-45f5-8f08-0bcc519d6acc",
+  "compiledShaders": [
+    {
+      "glsl1": {
+        "vert": "uniform mat4 cc_matViewProj;\nprecision highp float;\n  attribute vec3 a_position;\n  attribute vec2 a_uv0;\n  varying vec2 uv0;\n  void main () {\n      gl_Position = cc_matViewProj * vec4(a_position, 1);\n      uv0 = a_uv0;\n  }",
+        "frag": "\nprecision highp float;\nvarying vec2 uv0;\nuniform sampler2D texture;\nvoid main () {\n  vec4 yuv = texture2D(texture,uv0);\n  vec4 color= vec4(0,0,0,0);\n  if(yuv.r <= .0 && yuv.g<= .0 && yuv.b<= .0){\n  }else{\n    color.r =yuv.r + 1.4022 * yuv.b - 0.7011;\n    color.r = (color.r < 0.0) ? 0.0 : ((color.r > 1.0) ? 1.0 : color.r);\n    color.g =yuv.r - 0.3456 * yuv.g - 0.7145 * yuv.b + 0.53005;\n    color.g = (color.g < 0.0) ? 0.0 : ((color.g > 1.0) ? 1.0 : color.g);\n    color.b =yuv.r + 1.771 * yuv.g - 0.8855;\n    color.b = (color.b < 0.0) ? 0.0 : ((color.b > 1.0) ? 1.0 : color.b);\n    color.a = 1.0;\n  }\n  gl_FragColor = color;\n}"
+      },
+      "glsl3": {
+        "vert": "uniform CCGlobal {\n  mat4 cc_matView;\n  mat4 cc_matViewInv;\n  mat4 cc_matProj;\n  mat4 cc_matProjInv;\n  mat4 cc_matViewProj;\n  mat4 cc_matViewProjInv;\n  vec4 cc_cameraPos;\n  vec4 cc_time;\n  mediump vec4 cc_screenSize;\n  mediump vec4 cc_screenScale;\n};\nprecision highp float;\n  in vec3 a_position;\n  in vec2 a_uv0;\n  out vec2 uv0;\n  void main () {\n      gl_Position = cc_matViewProj * vec4(a_position, 1);\n      uv0 = a_uv0;\n  }",
+        "frag": "\nprecision highp float;\nin vec2 uv0;\nuniform sampler2D texture;\nvoid main () {\n  vec4 yuv = texture2D(texture,uv0);\n  vec4 color= vec4(0,0,0,0);\n  if(yuv.r <= .0 && yuv.g<= .0 && yuv.b<= .0){\n  }else{\n    color.r =yuv.r + 1.4022 * yuv.b - 0.7011;\n    color.r = (color.r < 0.0) ? 0.0 : ((color.r > 1.0) ? 1.0 : color.r);\n    color.g =yuv.r - 0.3456 * yuv.g - 0.7145 * yuv.b + 0.53005;\n    color.g = (color.g < 0.0) ? 0.0 : ((color.g > 1.0) ? 1.0 : color.g);\n    color.b =yuv.r + 1.771 * yuv.g - 0.8855;\n    color.b = (color.b < 0.0) ? 0.0 : ((color.b > 1.0) ? 1.0 : color.b);\n    color.a = 1.0;\n  }\n  gl_FragColor = color;\n}"
+      }
+    }
+  ],
+  "subMetas": {}
+}
